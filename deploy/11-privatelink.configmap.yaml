@@ -1,0 +1,25 @@
+---
+apiVersion: template.openshift.io/v1
+kind: Template
+metadata:
+  name: privatelink-infrastructure-monitor-config-template
+objects:
+- apiVersion: v1
+  kind: ConfigMap
+  metadata:
+    name: privatelink-infrastructure-monitor-config
+    namespace: openshift-monitoring
+  data:
+    vpc-id: "${VPC_ID}"
+    hosted-zone-id: "${HOSTED_ZONE_ID}"
+    push-gateway-address: "${PUSHGATEWAY_ADDRESS}"
+    aws-default-region: "${DEFAULT_REGION}"
+parameters:
+- description: VPC ID to monitor
+  name: VPC_ID
+- description: Hosted Zone ID to monitor
+  name: HOSTED_ZONE_ID
+- description: Address of the pushgateway to send metrics to
+  name: PUSHGATEWAY_ADDRESS
+- description: Default region to use for AWS
+  name: DEFAULT_REGION

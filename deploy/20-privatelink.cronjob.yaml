@@ -1,0 +1,74 @@
+---
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: privatelink-infrastructure-monitor-cronjob
+spec:
+  schedule: "* * */1 * *"
+  concurrencyPolicy: Forbid
+  successfulJobsHistoryLimit: 1
+  jobTemplate:
+    spec:
+      template:
+        spec:
+          restartPolicy: OnFailure
+          containers:
+          - name: privatelink-monitor
+            # TODO: Update the image with the correct repository once decided
+            image: quay.io/fbergman/privatelink-infrastructure-monitor:latest
+            args:
+              - "-vpc-id"
+              - "$(VPC_ID)"
+              - "-hosted-zone-id"
+              - "$(HOSTED_ZONE_ID)"
+              - "-push-gateway-address"
+              - "$(PUSH_GATEWAY_ADDRESS)"
+              - "-region"
+              - "$(AWS_DEFAULT_REGION)"
+            env:
+              - name: AWS_ACCESS_KEY_ID
+                valueFrom:
+                  secretKeyRef:
+                    name: privatelink-infrastructure-monitor-aws-credentials
+                    key: aws-access-key-id
+                    optional: false
+              - name: AWS_SECRET_ACCESS_KEY
+                valueFrom:
+                  secretKeyRef:
+                    name: privatelink-infrastructure-monitor-aws-credentials
+                    key: aws-secret-access-key
+                    optional: false
+              - name: AWS_SESSION_TOKEN
+                valueFrom:
+                  secretKeyRef:
+                    name: privatelink-infrastructure-monitor-aws-credentials
+                    key: aws-session-token
+                    optional: false
+              - name: AWS_DEFAULT_REGION
+                valueFrom:
+                  secretKeyRef:
+                    name: privatelink-infrastructure-monitor-aws-credentials
+                    key: aws-default-region
+                    optional: false
+              - name: VPC_ID
+                valueFrom:
+                  configMapKeyRef:
+                    name: privatelink-infrastructure-monitor-config
+                    key: vpc-id
+                    optional: false
+              - name: HOSTED_ZONE_ID
+                valueFrom:
+                  configMapKeyRef:
+                    name: privatelink-infrastructure-monitor-config
+                    key: hosted-zone-id
+                    optional: false
+              - name: PUSH_GATEWAY_ADDRESS
+                valueFrom:
+                  configMapKeyRef:
+                    name: privatelink-infrastructure-monitor-config
+                    key: push-gateway-address
+                    optional: false
+            resources:
+              limits:
+                memory: "128Mi"
+                cpu: "500m"
